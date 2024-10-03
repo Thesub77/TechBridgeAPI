@@ -19,9 +19,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else{
+else
+{
     app.UseHttpsRedirection();
-    }
+}
 
 // string connectionString = "Data Source=LOCALHOST/SSAS;Catalog=TechBridgeOLAP;";
 // AdomdConnection connection;
@@ -37,14 +38,14 @@ app.MapGet("/cubedata", () =>
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
-            
+
             // Transforma el resultado en JSON
             var jsonResult = TransformToJSON(result);
             return Results.Ok(jsonResult);
         }
     }
 
-List<Dictionary<string, object>> TransformToJSON(CellSet result)
+    List<Dictionary<string, object>> TransformToJSON(CellSet result)
     {
         var jsonData = new List<Dictionary<string, object>>();
         int cellIndex = 0; // Índice para rastrear las celdas correctamente
@@ -78,6 +79,61 @@ List<Dictionary<string, object>> TransformToJSON(CellSet result)
     }
 })
 .WithName("GetCubeData")
+.WithOpenApi();
+
+
+
+app.MapGet("/ganancia_15_proyectos_o_alfabet", () =>
+{
+    string connectionString = "Data Source=localhost\\SSAS;Catalog=TechBridgeOLAP;";  // Ajusta la cadena de conexión
+    using (AdomdConnection connection = new AdomdConnection(connectionString))
+    {
+        connection.Open();
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) SELECT {[Measures].[Profit Margin Without Nulls]} ON COLUMNS, TOPCOUNT( {[Project].[Project Name].MEMBERS}, 15 ) ON ROWS FROM [Soft Developers DW] WHERE [Date].[Year].[2010]";
+        using (AdomdCommand command = new AdomdCommand(myquery, connection))
+        {
+            var result = command.ExecuteCellSet();
+
+            // Transforma el resultado en JSON
+            var jsonResult = TransformToJSON(result);
+            return Results.Ok(jsonResult);
+        }
+    }
+
+    List<Dictionary<string, object>> TransformToJSON(CellSet result)
+    {
+        var jsonData = new List<Dictionary<string, object>>();
+        int cellIndex = 0; // Índice para rastrear las celdas correctamente
+
+        // Iterar a través de las filas dinámicamente
+        foreach (var rowPosition in result.Axes[1].Positions)  // Eje de filas (Dimensiones)
+        {
+            var dataPoint = new Dictionary<string, object>();
+
+            // Agregar las dimensiones (desde el eje de filas)
+            for (int i = 0; i < rowPosition.Members.Count; i++)
+            {
+                var dimensionName = result.Axes[1].Set.Hierarchies[i].Name;
+                dataPoint[dimensionName] = rowPosition.Members[i].Caption; // Añadir nombre de la dimensión y valor
+            }
+
+            // Añadir las medidas correspondientes (desde el eje de columnas)
+            for (int colIndex = 0; colIndex < result.Axes[0].Positions.Count; colIndex++)
+            {
+                var measureName = result.Axes[0].Positions[colIndex].Members[0].Caption; // Captura el nombre de la medida
+                var cellValue = result.Cells[cellIndex].Value; // Captura el valor correcto de la celda
+
+                dataPoint[measureName] = cellValue;
+                cellIndex++; // Aumentar el índice de la celda
+            }
+
+            jsonData.Add(dataPoint);
+        }
+
+        return jsonData;
+    }
+})
+.WithName("GetProfitProyectsAO")
 .WithOpenApi();
 
 app.Run();
