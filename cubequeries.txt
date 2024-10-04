@@ -1,0 +1,108 @@
+1- Margen de ganancia de 15 proyectos ordenados alfabeticamente entregados en el 2010
+
+WITH 
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+SELECT
+    {[Measures].[Profit Margin Without Nulls]} ON COLUMNS,
+    TOPCOUNT(
+        {[Project].[Project Name].MEMBERS}, 15
+    ) ON ROWS
+FROM [Soft Developers DW]
+WHERE [Date].[Year].[2010]
+
+
+2- Clientes que han dejado una ganancia mayor a 50000
+
+SELECT
+    {[Measures].[Profit Margin]} ON COLUMNS,
+    FILTER(
+		[Customer].[Company Name].MEMBERS,
+		[Measures].[Profit Margin] > 50000
+		) ON ROWS
+FROM [Soft Developers DW]
+
+
+3- Total de ganancia de los ultimos 4 anios (sin incluir el anio actual)
+
+WITH 
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+SELECT
+    {[Measures].[Profit Margin Without Nulls]} ON COLUMNS,
+    Tail(
+        FILTER(
+            [Date].[Year].MEMBERS,
+            [Date].[Year].CURRENTMEMBER.NAME <= "2023"
+        ), 4
+    ) ON ROWS
+FROM [Soft Developers DW]
+
+
+4- 10 proyectos con mayor margen de ganancia
+
+WITH 
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+SELECT
+    {[Measures].[Profit Margin Without Nulls]} ON COLUMNS,
+    TOPCOUNT(
+        {[Project].[Project Name].MEMBERS}, 
+        10, 
+        [Measures].[Profit Margin Without Nulls]
+    ) ON ROWS
+FROM [Soft Developers DW]
+
+
+
+5- 10 proyectos con menor margen de ganancia agrupados por Anio
+
+SELECT
+    {[Measures].[Profit Margin]} ON COLUMNS,
+    BOTTOMCOUNT(
+        FILTER(
+            {[Project].[Project Name].MEMBERS},
+            NOT IsEmpty([Measures].[Profit Margin])
+        ), 
+        10, 
+        [Measures].[Profit Margin]
+    ) ON ROWS
+FROM [Soft Developers DW]
+
+
+
+6- Margen de ganancia por proyecto cuyo costo total superen los 1000000
+
+SELECT
+    {[Measures].[Profit Margin]} ON COLUMNS,
+    FILTER(
+		[Project].[Project Name].MEMBERS,
+		[Measures].[Payment Amount] > 1000000
+		) ON ROWS
+FROM [Soft Developers DW]
+
+
+7- Proyectos con un costo total superior a 1500000
+
+SELECT 
+    {[Measures].[Payment Amount]} ON COLUMNS,
+    NON EMPTY 
+    FILTER(
+        [Project].[Project Name].MEMBERS,
+        [Measures].[Payment Amount] > 1500000
+    ) ON ROWS
+FROM [Soft Developers DW]
+
+8- Ganancia de los ultimos 10 proyectos entregados
+
+SELECT 
+    {[Measures].[Profit Margin]} ON COLUMNS,
+    TOPCOUNT(
+        ORDER(
+            [Project].[Project Name].MEMBERS,
+            [Project].[Project Deadline],
+            DESC
+        ),
+        10
+    ) ON ROWS
+FROM [Soft Developers DW]
