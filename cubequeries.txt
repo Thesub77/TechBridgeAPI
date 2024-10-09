@@ -3,10 +3,12 @@
 WITH 
 MEMBER [Measures].[Profit Margin Without Nulls] AS
     CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT
-    {[Measures].[Profit Margin Without Nulls]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     TOPCOUNT(
-        {[Project].[Project Name].MEMBERS}, 15
+        {[Project].[Project Name].MEMBERS}, 16
     ) ON ROWS
 FROM [Soft Developers DW]
 WHERE [Date].[Year].[2010]
@@ -14,12 +16,17 @@ WHERE [Date].[Year].[2010]
 
 2- Clientes que han dejado una ganancia mayor a 50000
 
+WITH
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT
-    {[Measures].[Profit Margin]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     FILTER(
-		[Customer].[Company Name].MEMBERS,
-		[Measures].[Profit Margin] > 50000
-		) ON ROWS
+        [Customer].[Company Name].MEMBERS,
+        [Measures].[Profit Margin Without Nulls] > 50000
+    ) ON ROWS
 FROM [Soft Developers DW]
 
 
@@ -40,32 +47,38 @@ FROM [Soft Developers DW]
 
 
 4- 10 proyectos con mayor margen de ganancia
-
-WITH 
+WITH
 MEMBER [Measures].[Profit Margin Without Nulls] AS
     CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT
-    {[Measures].[Profit Margin Without Nulls]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     TOPCOUNT(
         {[Project].[Project Name].MEMBERS}, 
-        10, 
+        11, 
         [Measures].[Profit Margin Without Nulls]
     ) ON ROWS
 FROM [Soft Developers DW]
 
 
 
-5- 10 proyectos con menor margen de ganancia agrupados por Anio
+5- 10 proyectos con menor margen de ganancia
 
+WITH
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT
-    {[Measures].[Profit Margin]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     BOTTOMCOUNT(
         FILTER(
             {[Project].[Project Name].MEMBERS},
-            NOT IsEmpty([Measures].[Profit Margin])
+            NOT IsEmpty([Measures].[Profit Margin Without Nulls])
         ), 
-        10, 
-        [Measures].[Profit Margin]
+        11, 
+        [Measures].[Profit Margin Without Nulls]
     ) ON ROWS
 FROM [Soft Developers DW]
 
@@ -73,12 +86,17 @@ FROM [Soft Developers DW]
 
 6- Margen de ganancia por proyecto cuyo costo total superen los 1000000
 
+WITH
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT
-    {[Measures].[Profit Margin]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     FILTER(
-		[Project].[Project Name].MEMBERS,
-		[Measures].[Payment Amount] > 1000000
-		) ON ROWS
+        [Project].[Project Name].MEMBERS,
+        [Measures].[Payment Amount Without Nulls] > 1000000
+    ) ON ROWS
 FROM [Soft Developers DW]
 
 
@@ -95,14 +113,21 @@ FROM [Soft Developers DW]
 
 8- Ganancia de los ultimos 10 proyectos entregados
 
+WITH
+MEMBER [Measures].[Profit Margin Without Nulls] AS
+    CoalesceEmpty([Measures].[Profit Margin], 0)
+MEMBER [Measures].[Payment Amount Without Nulls] AS
+    CoalesceEmpty([Measures].[Payment Amount], 0)
 SELECT 
-    {[Measures].[Profit Margin]} ON COLUMNS,
+    {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS,
     TOPCOUNT(
         ORDER(
             [Project].[Project Name].MEMBERS,
             [Project].[Project Deadline],
             DESC
         ),
-        10
+        11
     ) ON ROWS
 FROM [Soft Developers DW]
+
+

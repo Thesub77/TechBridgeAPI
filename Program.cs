@@ -8,12 +8,28 @@ using ApiCubeTB.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Agrega CORS para permitir la conexion desde cualquier origen
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+        });
+});
+
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Usa CORS
+app.UseCors("AllowAllOrigins");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -69,7 +85,7 @@ app.MapGet("/ganancia_15_proyectos_o_alfabet", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) SELECT {[Measures].[Profit Margin Without Nulls]} ON COLUMNS, TOPCOUNT( {[Project].[Project Name].MEMBERS}, 15 ) ON ROWS FROM [Soft Developers DW] WHERE [Date].[Year].[2010]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, TOPCOUNT( {[Project].[Project Name].MEMBERS}, 16) ON ROWS FROM [Soft Developers DW] WHERE [Date].[Year].[2010]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -91,7 +107,7 @@ app.MapGet("/ganancia_clientes_mayor_50000", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "SELECT {[Measures].[Profit Margin]} ON COLUMNS, FILTER([Customer].[Company Name].MEMBERS, [Measures].[Profit Margin] > 50000) ON ROWS FROM [Soft Developers DW]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, FILTER( [Customer].[Company Name].MEMBERS, [Measures].[Profit Margin Without Nulls] > 50000) ON ROWS FROM [Soft Developers DW]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -135,7 +151,7 @@ app.MapGet("/proyectos_mayor_ganancia", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) SELECT {[Measures].[Profit Margin Without Nulls]} ON COLUMNS, TOPCOUNT( {[Project].[Project Name].MEMBERS}, 10, [Measures].[Profit Margin Without Nulls]) ON ROWS FROM [Soft Developers DW]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, TOPCOUNT( {[Project].[Project Name].MEMBERS}, 11, [Measures].[Profit Margin Without Nulls]) ON ROWS FROM [Soft Developers DW]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -157,7 +173,7 @@ app.MapGet("/proyectos_menor_ganancia", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "SELECT {[Measures].[Profit Margin]} ON COLUMNS, BOTTOMCOUNT( FILTER( {[Project].[Project Name].MEMBERS}, NOT IsEmpty([Measures].[Profit Margin])), 10, [Measures].[Profit Margin]) ON ROWS FROM [Soft Developers DW]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, BOTTOMCOUNT( FILTER( {[Project].[Project Name].MEMBERS}, NOT IsEmpty([Measures].[Profit Margin Without Nulls])), 11, [Measures].[Profit Margin Without Nulls]) ON ROWS FROM [Soft Developers DW]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -179,7 +195,7 @@ app.MapGet("/ganancia_proyectosCostos_mayor_1000000", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "SELECT {[Measures].[Profit Margin]} ON COLUMNS, FILTER( [Project].[Project Name].MEMBERS, [Measures].[Payment Amount] > 1000000) ON ROWS FROM [Soft Developers DW]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, FILTER( [Project].[Project Name].MEMBERS, [Measures].[Payment Amount Without Nulls] > 1000000) ON ROWS FROM [Soft Developers DW]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -223,7 +239,7 @@ app.MapGet("/ganancia_ultimos10_proyectos_entregados", () =>
     using (AdomdConnection connection = helper.GetConnection())
     {
         // Establecer la consulta al cubo
-        string myquery = "SELECT {[Measures].[Profit Margin]} ON COLUMNS, TOPCOUNT( ORDER( [Project].[Project Name].MEMBERS, [Project].[Project Deadline], DESC), 10) ON ROWS FROM [Soft Developers DW]";
+        string myquery = "WITH MEMBER [Measures].[Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Profit Margin], 0) MEMBER [Measures].[Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Payment Amount], 0) SELECT {[Measures].[Profit Margin Without Nulls], [Measures].[Payment Amount Without Nulls]} ON COLUMNS, TOPCOUNT( ORDER( [Project].[Project Name].MEMBERS, [Project].[Project Deadline], DESC), 11) ON ROWS FROM [Soft Developers DW]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
