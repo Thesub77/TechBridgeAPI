@@ -4,11 +4,25 @@ namespace ApiCubeTB.Utils
 {
     public class MyHelperClass
     {
+        // Cadena de conexion del modelo multidimensional
         string connectionString = "Data Source=localhost\\SSAS;Catalog=TechBridgeOLAP;";
 
+        // Metodo que crea una conexion al modelo multidimensional
         public AdomdConnection GetConnection()
         {
             AdomdConnection cnx = new AdomdConnection(connectionString);
+            cnx.Open();
+            return cnx;
+        }
+
+
+        // Cadena de conexion del modelo tabular
+        string connectionStringTabular = "Provider=MSOLEDB;Data Source=localhost\\SSASTabular;Initial Catalog=TechBridgeTabular;";
+
+        // Metodo que crea una conexion al modelo tabular
+        public AdomdConnection GetConnectionTabular()
+        {
+            AdomdConnection cnx = new AdomdConnection(connectionStringTabular);
             cnx.Open();
             return cnx;
         }

@@ -46,6 +46,8 @@ else
 var helper = new MyHelperClass();
 
 
+// * Endpoints que realizan consultas al modelo multidimensional de TechBridge * \\
+
 // Endpoint root
 app.MapGet("/", () =>
 {
@@ -54,6 +56,7 @@ app.MapGet("/", () =>
 })
 .WithName("RootEndpoint")
 .WithOpenApi();
+
 
 
 // Endpoint de de prueba de la conexion al cubo
@@ -78,6 +81,7 @@ app.MapGet("/cubedatatest", () =>
 .WithOpenApi();
 
 
+
 // Endpoint que retorna la ganancia de 15 proyectos ordenados alfabeticamente
 app.MapGet("/ganancia_15_proyectos_o_alfabet", () =>
 {
@@ -98,6 +102,7 @@ app.MapGet("/ganancia_15_proyectos_o_alfabet", () =>
 })
 .WithName("GetProfitProjectsSO")
 .WithOpenApi();
+
 
 
 // Endpoint que retorna el nombre y la ganancia de los clientes que han dejado mas de 50k de ganancia
@@ -122,6 +127,7 @@ app.MapGet("/ganancia_clientes_mayor_50000", () =>
 .WithOpenApi();
 
 
+
 // Endpoint que retorna la ganancia de los ultimos 4 anios [2020, 2021, 2022, 2023]
 app.MapGet("/ganancia_ultimos_4_anios", () =>
 {
@@ -142,6 +148,7 @@ app.MapGet("/ganancia_ultimos_4_anios", () =>
 })
 .WithName("GetFourYearsProfit")
 .WithOpenApi();
+
 
 
 // Endpoint que retorna los 10 proyectos con mayor ganancia
@@ -166,6 +173,7 @@ app.MapGet("/proyectos_mayor_ganancia", () =>
 .WithOpenApi();
 
 
+
 // Endpoint que retorna los 10 proyectos con menor ganancia
 app.MapGet("/proyectos_menor_ganancia", () =>
 {
@@ -186,6 +194,7 @@ app.MapGet("/proyectos_menor_ganancia", () =>
 })
 .WithName("GetProjectsWLessProfit")
 .WithOpenApi();
+
 
 
 // Endpoint que retorna la ganancia total de los proyectos que tienen un valor total mayor a 1M
@@ -210,6 +219,7 @@ app.MapGet("/ganancia_proyectosCostos_mayor_1000000", () =>
 .WithOpenApi();
 
 
+
 // Endpoint que retorna los proyectos con un valor total superior a 1.5M
 app.MapGet("/proyectosCostos_mayor_1500000", () =>
 {
@@ -232,6 +242,7 @@ app.MapGet("/proyectosCostos_mayor_1500000", () =>
 .WithOpenApi();
 
 
+
 // Endpoint que retorna el total de ganancia de los ultimos 10 proyectos entregados
 app.MapGet("/ganancia_ultimos10_proyectos_entregados", () =>
 {
@@ -252,6 +263,35 @@ app.MapGet("/ganancia_ultimos10_proyectos_entregados", () =>
 })
 .WithName("GetLastProjectsProfit")
 .WithOpenApi();
+
+
+
+// * Endpoints que realizan consultas al modelo tabular de TechBridge * \\
+
+// Endpoint de de prueba de la conexion al modelo tabular
+app.MapGet("/tabulardatatest", () =>
+{
+    // Establecer conexion con el cubo
+    using (AdomdConnection connection = helper.GetConnectionTabular())
+    {
+        // Establecer la consulta al cubo
+        string myquery = " SELECT NON EMPTY { [Measures].[Sum of profit margin] } ON COLUMNS, NON EMPTY { ([Dim_Project].[project name].[project name].ALLMEMBERS ) } DIMENSION PROPERTIES MEMBER_CAPTION, MEMBER_UNIQUE_NAME ON ROWS FROM [Model] CELL PROPERTIES VALUE, BACK_COLOR, FORE_COLOR, FORMATTED_VALUE, FORMAT_STRING, FONT_NAME, FONT_SIZE, FONT_FLAGS";
+        using (AdomdCommand command = new AdomdCommand(myquery, connection))
+        {
+            var result = command.ExecuteCellSet();
+
+            // Transforma el resultado en JSON
+            var jsonResult = helper.TransformToJSON(result);
+            return Results.Ok(jsonResult);
+        }
+    }
+})
+.WithName("GetTabularData")
+.WithOpenApi();
+
+
+
+
 
 
 // Ejecutar la API
