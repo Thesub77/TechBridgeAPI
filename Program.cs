@@ -291,6 +291,78 @@ app.MapGet("/tabulardatatest", () =>
 
 
 
+// Endpoint que devuelve la ganancia promedio por proyecto
+app.MapGet("/ganancia-promedio-proyectos", () =>
+{
+    // Establecer conexion con el cubo
+    using (AdomdConnection connection = helper.GetConnectionTabular())
+    {
+        // Establecer la consulta al cubo
+        string myquery = "WITH MEMBER [Measures].[Average of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Average of profit margin], 0) SELECT NON EMPTY { [Measures].[Average of Profit Margin Without Nulls] } ON COLUMNS, NON EMPTY { FILTER( [Dim_Project].[project name].[project name].ALLMEMBERS, [Dim_Project].[project name].CURRENTMEMBER.MEMBER_CAPTION <> 'N/A') } ON ROWS FROM [Model]";
+        using (AdomdCommand command = new AdomdCommand(myquery, connection))
+        {
+            var result = command.ExecuteCellSet();
+
+            // Transforma el resultado en JSON
+            var jsonResult = helper.TransformToJSON(result);
+            return Results.Ok(jsonResult);
+        }
+    }
+})
+.WithName("GetAverageProjectProfit")
+.WithOpenApi();
+
+
+
+// Endpoint que devuelve el total de dinero desembolsado y cantidad de pagos realizados por cliente
+app.MapGet("/dinero-desembolsado-&pagos-cliente", () =>
+{
+    // Establecer conexion con el cubo
+    using (AdomdConnection connection = helper.GetConnectionTabular())
+    {
+        // Establecer la consulta al cubo
+        string myquery = "WITH MEMBER [Measures].[Sum of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Sum of payment amount], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) SELECT NON EMPTY { [Measures].[Sum of Payment Amount Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { [Dim_Customer].[company name].[company name].ALLMEMBERS } ON ROWS FROM [Model]";
+        using (AdomdCommand command = new AdomdCommand(myquery, connection))
+        {
+            var result = command.ExecuteCellSet();
+
+            // Transforma el resultado en JSON
+            var jsonResult = helper.TransformToJSON(result);
+            return Results.Ok(jsonResult);
+        }
+    }
+})
+.WithName("GetPaymentAmountPerClient")
+.WithOpenApi();
+
+
+
+// Endpoint que devuelve el total de ganancia y cantidad de pagos realizados en un anio especifico
+app.MapGet("/ganancia-&pagos-anio", (int year) =>
+{
+    // Validar el anio recibido
+    if (year < 2000 || year > DateTime.Now.Year)
+    {
+        return Results.BadRequest("El año proporcionado no es válido.");
+    }
+
+    // Establecer conexion con el cubo
+    using (AdomdConnection connection = helper.GetConnectionTabular())
+    {
+        // Establecer la consulta al cubo
+        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) SELECT NON EMPTY { [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { [Dim_Date].[Calendar Hierarchy].[Month Name].MEMBERS } ON ROWS FROM [Model] WHERE ([Dim_Date].[Year].&[" + year + "])";
+        using (AdomdCommand command = new AdomdCommand(myquery, connection))
+        {
+            var result = command.ExecuteCellSet();
+
+            // Transforma el resultado en JSON
+            var jsonResult = helper.TransformToJSON(result);
+            return Results.Ok(jsonResult);
+        }
+    }
+})
+.WithName("GetPayment&profit")
+.WithOpenApi();
 
 
 
