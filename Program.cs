@@ -338,19 +338,13 @@ app.MapGet("/dinero-desembolsado-&pagos-cliente", () =>
 
 
 // Endpoint que devuelve el total de ganancia y cantidad de pagos realizados en un anio especifico
-app.MapGet("/ganancia-&pagos-anio", (int year) =>
+app.MapGet("/ganancia-&pagos-anio", () =>
 {
-    // Validar el anio recibido
-    if (year < 2000 || year > DateTime.Now.Year)
-    {
-        return Results.BadRequest("El año proporcionado no es válido.");
-    }
-
     // Establecer conexion con el cubo
     using (AdomdConnection connection = helper.GetConnectionTabular())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) SELECT NON EMPTY { [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { [Dim_Date].[Calendar Hierarchy].[Month Name].MEMBERS } ON ROWS FROM [Model] WHERE ([Dim_Date].[Year].&[" + year + "])";
+        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) MEMBER [Measures].[Year] AS [Dim_Date].[Year].CURRENTMEMBER.NAME SELECT NON EMPTY { [Measures].[Year], [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { FILTER( [Dim_Date].[Calendar Hierarchy].[Month Name].MEMBERS, [Dim_Date].[Month Name].CURRENTMEMBER.NAME <> 'N/A' AND [Dim_Date].[Year].CURRENTMEMBER.NAME >= '2005')} ON ROWS FROM [Model]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
