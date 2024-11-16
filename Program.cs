@@ -291,14 +291,14 @@ app.MapGet("/tabulardatatest", () =>
 
 
 
-// Endpoint que devuelve la ganancia promedio por proyecto
-app.MapGet("/ganancia-promedio-proyectos", () =>
+// Endpoint que devuelve los 10 proyectos con mayor ganancia con su total de pagos
+app.MapGet("/proyectos-&con-mayor-ganancia", () =>
 {
     // Establecer conexion con el cubo
     using (AdomdConnection connection = helper.GetConnectionTabular())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Average of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Average of profit margin], 0) SELECT NON EMPTY { [Measures].[Average of Profit Margin Without Nulls] } ON COLUMNS, NON EMPTY { FILTER( [Dim_Project].[project name].[project name].ALLMEMBERS, [Dim_Project].[project name].CURRENTMEMBER.MEMBER_CAPTION <> 'N/A') } ON ROWS FROM [Model]";
+        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) MEMBER [Measures].[Sum of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Sum of payment amount], 0) SELECT NON EMPTY { [Measures].[Sum of payment amount Without Nulls], [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { FILTER( TOPCOUNT([Dim_Project].[Project Name].MEMBERS, 10, [Measures].[Sum of Profit Margin Without Nulls]), [Dim_Project].[Project Name].CURRENTMEMBER.NAME <> 'All')} ON ROWS FROM [Model]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -309,19 +309,19 @@ app.MapGet("/ganancia-promedio-proyectos", () =>
         }
     }
 })
-.WithName("GetAverageProjectProfit")
+.WithName("GetMaxProfitProjects")
 .WithOpenApi();
 
 
 
-// Endpoint que devuelve el total de dinero desembolsado y cantidad de pagos realizados por cliente
-app.MapGet("/dinero-desembolsado-&pagos-cliente", () =>
+// Endpoint que devuelve el total de dinero ganado por trimestre
+app.MapGet("/dinero-ganado-&trimestre", () =>
 {
     // Establecer conexion con el cubo
     using (AdomdConnection connection = helper.GetConnectionTabular())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Sum of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Sum of payment amount], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) SELECT NON EMPTY { [Measures].[Sum of Payment Amount Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { [Dim_Customer].[company name].[company name].ALLMEMBERS } ON ROWS FROM [Model]";
+        string myquery = "WITH MEMBER [Measures].[Sum of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Sum of payment amount], 0) MEMBER [Measures].[Year] AS [Dim_Date].[Year].CURRENTMEMBER.NAME SELECT NON EMPTY { [Measures].[Sum of Payment Amount Without Nulls], [Measures].[Year]} ON COLUMNS, NON EMPTY { FILTER([Dim_Date].[Calendar Hierarchy].[Quarter].MEMBERS, [Dim_Date].[Year].CURRENTMEMBER.NAME >= '2005')} ON ROWS FROM [Model]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -332,19 +332,19 @@ app.MapGet("/dinero-desembolsado-&pagos-cliente", () =>
         }
     }
 })
-.WithName("GetPaymentAmountPerClient")
+.WithName("GetPaymentAmountByQuarter")
 .WithOpenApi();
 
 
 
-// Endpoint que devuelve el total de ganancia y cantidad de pagos realizados en un anio especifico
+// Endpoint que devuelve el total de ganancia y cantidad de pagos realizados
 app.MapGet("/ganancia-&pagos-anio", () =>
 {
     // Establecer conexion con el cubo
     using (AdomdConnection connection = helper.GetConnectionTabular())
     {
         // Establecer la consulta al cubo
-        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) MEMBER [Measures].[Year] AS [Dim_Date].[Year].CURRENTMEMBER.NAME SELECT NON EMPTY { [Measures].[Year], [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { FILTER( [Dim_Date].[Calendar Hierarchy].[Month Name].MEMBERS, [Dim_Date].[Month Name].CURRENTMEMBER.NAME <> 'N/A' AND [Dim_Date].[Year].CURRENTMEMBER.NAME >= '2005')} ON ROWS FROM [Model]";
+        string myquery = "WITH MEMBER [Measures].[Sum of Profit Margin Without Nulls] AS CoalesceEmpty([Measures].[Sum of profit margin], 0) MEMBER [Measures].[Count of Payment Amount Without Nulls] AS CoalesceEmpty([Measures].[Count of payment amount], 0) MEMBER [Measures].[Year] AS [Dim_Date].[Year].CURRENTMEMBER.NAME SELECT NON EMPTY { [Measures].[Year], [Measures].[Sum of Profit Margin Without Nulls], [Measures].[Count of Payment Amount Without Nulls] } ON COLUMNS, NON EMPTY { FILTER([Dim_Date].[Calendar Hierarchy].[Month Name].MEMBERS, [Dim_Date].[Month Name].CURRENTMEMBER.NAME <> 'N/A' AND [Dim_Date].[Year].CURRENTMEMBER.NAME >= '2005')} ON ROWS FROM [Model]";
         using (AdomdCommand command = new AdomdCommand(myquery, connection))
         {
             var result = command.ExecuteCellSet();
@@ -355,7 +355,7 @@ app.MapGet("/ganancia-&pagos-anio", () =>
         }
     }
 })
-.WithName("GetPayment&profit")
+.WithName("GetPaymentCount&profit")
 .WithOpenApi();
 
 
