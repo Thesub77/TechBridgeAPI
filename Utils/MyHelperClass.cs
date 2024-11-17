@@ -17,8 +17,7 @@ namespace ApiCubeTB.Utils
 
 
         // Cadena de conexion del modelo tabular
-        string connectionStringTabular = "Provider=MSOLEDB;Data Source=localhost\\SSASTabular;Initial Catalog=TechBridgeTabular;";
-
+        string connectionStringTabular = "Provider=MSOLAP;Data Source=asazure://canadacentral.asazure.windows.net/ssastechbridge;Initial Catalog=TechBridgeTabular;User ID=isiazuest15@estu.unan.edu.ni;Password=SoyrealThesubjectD7F;Persist Security Info=True;Impersonation Level=Impersonate";
         // Metodo que crea una conexion al modelo tabular
         public AdomdConnection GetConnectionTabular()
         {
