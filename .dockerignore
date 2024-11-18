@@ -1,0 +1,33 @@
+# Ignorar archivos y carpetas generadas por el sistema
+**/.vscode/
+**/.vs/
+**/.git/
+**/.DS_Store
+
+# Ignorar archivos binarios y compilados
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Ignorar paquetes NuGet descargados localmente
+**/packages/
+**/nuget.exe
+
+# Ignorar configuraciones locales y de usuario
+*.user
+*.suo
+
+# Ignorar archivos de publicación generados por VS o dotnet publish
+**/publish/
+**/out/
+
+# Ignorar configuraciones de entorno y secrets locales
+.env
+.env.*
+
+# Ignorar archivos temporales de desarrollo
+*.log
+*.tmp
+*.temp
